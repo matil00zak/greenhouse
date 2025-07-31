@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Wykres Wilgotności</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Wilgotność (DHT 1 i DHT 2)</h2>
+    <canvas id="humidityChart"></canvas>
+
+    <script>
+        const timestamps = {{ timestamps|tojson }};
+        const humidities1 = {{ humidities1|tojson }};
+        const humidities2 = {{ humidities2|tojson }};
+
+        const ctx = document.getElementById("humidityChart").getContext("2d");
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: "Wilgotność DHT 1 [%]",
+                        data: humidities1,
+                        fill: false,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        borderColor: "blue"
+                    },
+                    {
+                        label: "Wilgotność DHT 2 [%]",
+                        data: humidities2,
+                        fill: false,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        borderColor: "green"
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Czas' } },
+                    y: { title: { display: true, text: 'Wilgotność [%]' }, min: 0, max: 100 }
+                }
+            }
+        });
+
+        // Automatyczna aktualizacja wykresu co minutę
+        setInterval(() => {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    chart.data.labels = data.timestamps;
+                    chart.data.datasets[0].data = data.humidities1;
+                    chart.data.datasets[1].data = data.humidities2;
+                    chart.update();
+                });
+        }, 60000); // co 60 sekund
+    </script>
+</body>
+</html>
